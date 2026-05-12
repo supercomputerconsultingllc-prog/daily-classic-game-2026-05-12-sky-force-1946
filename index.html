@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sky Force 1946</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <section class="hud" aria-live="polite">
+      <div class="chip"><span>Score</span><strong id="scoreValue">0</strong></div>
+      <div class="chip"><span>Lives</span><strong id="livesValue">3</strong></div>
+      <div class="chip"><span>Bombs</span><strong id="bombsValue">3</strong></div>
+      <div class="chip"><span>Weapon</span><strong id="weaponValue">Lv1</strong></div>
+      <div class="chip"><span>Best</span><strong id="bestValue">0</strong></div>
+    </section>
+
+    <section class="stage">
+      <canvas id="game" width="900" height="1200" aria-label="Sky Force 1946 game"></canvas>
+      <div class="overlay" id="overlay">
+        <h1 id="overlayTitle">Sky Force 1946</h1>
+        <p id="overlayMessage">Air raid incoming. Dodge, strafe, and blast through enemy squadrons.</p>
+        <div class="overlay-actions">
+          <button type="button" id="startButton">Launch Mission</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <button id="pauseButton" type="button" class="ghost">Pause / Resume</button>
+      <p>Move: <kbd>Arrows</kbd> / <kbd>WASD</kbd> / mouse / touch</p>
+      <p>Bomb: <kbd>Space</kbd></p>
+      <p>Power-ups: Spread, Shield, Bomb Supply</p>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
