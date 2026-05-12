@@ -3,10 +3,10 @@
 }
 
 :root {
-  --bg-a: #081424;
-  --bg-b: #0f2f49;
-  --panel: rgba(5, 16, 30, 0.72);
-  --panel-border: rgba(173, 223, 255, 0.52);
+  --bg-a: #060f1b;
+  --bg-b: #17344f;
+  --panel: rgba(3, 10, 21, 0.82);
+  --panel-border: rgba(174, 212, 245, 0.45);
   --text: #f2f8ff;
   --accent-a: #4fd7ff;
   --accent-b: #ffd166;
@@ -33,7 +33,7 @@ body {
 .hud {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .chip {
@@ -52,7 +52,7 @@ body {
 }
 
 .chip strong {
-  font-size: 21px;
+  font-size: 19px;
   color: #ffffff;
 }
 

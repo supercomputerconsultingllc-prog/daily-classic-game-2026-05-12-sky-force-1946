@@ -1,10 +1,11 @@
 # Sky Force 1946
 
-`Sky Force 1946` is a modernized daily-classic take on the 1945-style vertical shooter:
+`Sky Force 1946` is a near-replica daily-classic take on the 1945-style vertical shooter:
 
+- scripted stage waves and classic boss-phase transitions
 - tighter dodge controls (keyboard + mouse + touch)
-- layered enemy formations and boss phases
-- spread weapon upgrades, shield window, and bomb clears
+- `P` weapon progression and `B` bomb pickups
+- spread fire growth with wingman-style support at high power
 - persistent local best score
 
 ## Run
@@ -22,9 +23,9 @@ Open `index.html` in a browser.
 
 1. Start mission launches immediately from overlay.
 2. Player movement works on keyboard and pointer/touch.
-3. Weapon upgrade increases bullet count.
-4. Shield power-up grants temporary invulnerability flash.
-5. Bomb clears enemy bullets and destroys non-boss enemies.
-6. Boss appears after score threshold and has health bar.
-7. Game over overlay appears at zero lives and restart works.
+3. Stage wave counter advances as scripted enemy formations spawn.
+4. `P` upgrade increases spread fire and reaches wingman-style lanes at max.
+5. `B` bomb clears enemy bullets and heavily damages all enemies.
+6. Boss appears as final wave with multi-pattern bullet attacks and health bar.
+7. Stage clear overlay advances to next stage; game over restart works.
 8. Best score persists between runs when storage is available.
