@@ -26,7 +26,9 @@ const images = {
   bulletPlayer: new Image(),
   bulletEnemy: new Image(),
   powerP: new Image(),
-  powerB: new Image()
+  powerB: new Image(),
+  medal: new Image(),
+  option: new Image()
 };
 
 images.background.src = "assets/bg-cloud-warzone.svg";
@@ -38,6 +40,8 @@ images.bulletPlayer.src = "assets/bullet-player.svg";
 images.bulletEnemy.src = "assets/bullet-enemy.svg";
 images.powerP.src = "assets/power-spread.svg";
 images.powerB.src = "assets/power-bomb.svg";
+images.medal.src = "assets/medal.svg";
+images.option.src = "assets/option-drone.svg";
 
 const input = {
   keys: new Set(),
@@ -102,9 +106,13 @@ const state = {
   elapsedMs: 0,
   script: [],
   scriptIndex: 0,
+  combatEventsTotal: 0,
   bossActive: false,
   invulnerableUntil: 0,
-  bombFlashUntil: 0
+  bombFlashUntil: 0,
+  bannerText: "",
+  bannerUntil: 0,
+  medalValue: 100
 };
 
 const player = {
@@ -112,8 +120,8 @@ const player = {
   y: HEIGHT - 165,
   width: 88,
   height: 108,
-  speed: 7.2,
-  fireBaseDelay: 126,
+  speed: 7.35,
+  fireBaseDelay: 124,
   lastShotAt: 0
 };
 
@@ -180,14 +188,19 @@ function spawnBurst(x, y, count, color) {
     particles.push({
       x,
       y,
-      vx: rand(-4.5, 4.5),
-      vy: rand(-4.4, 3.8),
+      vx: rand(-4.6, 4.6),
+      vy: rand(-4.6, 3.9),
       size: rand(2, 5),
       color,
-      life: rand(0.24, 0.86),
+      life: rand(0.25, 0.92),
       age: 0
     });
   }
+}
+
+function showBanner(text, durationMs = 1400) {
+  state.bannerText = text;
+  state.bannerUntil = performance.now() + durationMs;
 }
 
 function makeEnemy(type, x, y, pattern = "straight", overrides = {}) {
@@ -197,8 +210,8 @@ function makeEnemy(type, x, y, pattern = "straight", overrides = {}) {
       width: 62,
       height: 80,
       hp: 2,
-      vy: rand(3.2, 4.0),
-      score: 130,
+      vy: rand(3.2, 4.1),
+      score: 120,
       shot: [1100, 1650]
     },
     fighter: {
@@ -208,25 +221,25 @@ function makeEnemy(type, x, y, pattern = "straight", overrides = {}) {
       hp: 5,
       vy: rand(2.8, 3.5),
       score: 320,
-      shot: [850, 1300]
+      shot: [800, 1260]
     },
     bomber: {
       sprite: "enemyFighter",
       width: 98,
       height: 120,
       hp: 11,
-      vy: rand(2.1, 2.6),
-      score: 680,
-      shot: [730, 1080]
+      vy: rand(2.0, 2.5),
+      score: 720,
+      shot: [620, 960]
     },
     boss: {
       sprite: "enemyBoss",
       width: 252,
       height: 220,
-      hp: 330 + state.stage * 110,
+      hp: 360 + state.stage * 120,
       vy: 1.1,
-      score: 4600,
-      shot: [280, 460]
+      score: 4800,
+      shot: [260, 440]
     }
   };
 
@@ -271,52 +284,65 @@ function spawnV(type, count, y) {
     const offset = i - mid;
     enemies.push(
       makeEnemy(type, WIDTH / 2 + offset * 68, y - Math.abs(offset) * 56, "sine", {
-        waveAmp: 18 + Math.abs(offset) * 9
+        waveAmp: 20 + Math.abs(offset) * 9
       })
     );
   }
 }
 
-function spawnDive(type, side = "left") {
+function spawnDive(type, side = "left", count = 4) {
   const fromLeft = side === "left";
-  for (let i = 0; i < 4; i += 1) {
-    const x = fromLeft ? -70 - i * 42 : WIDTH + 70 + i * 42;
-    const vx = fromLeft ? rand(1.8, 2.6) : -rand(1.8, 2.6);
+  for (let i = 0; i < count; i += 1) {
+    const x = fromLeft ? -74 - i * 44 : WIDTH + 74 + i * 44;
+    const vx = fromLeft ? rand(2.0, 2.8) : -rand(2.0, 2.8);
     enemies.push(
-      makeEnemy(type, x, 110 + i * 72, "dive", {
+      makeEnemy(type, x, 120 + i * 70, "dive", {
         vx,
-        vy: rand(2.6, 3.2)
+        vy: rand(2.5, 3.3)
       })
     );
   }
+}
+
+function spawnPincer(type) {
+  spawnDive(type, "left", 5);
+  spawnDive(type, "right", 5);
 }
 
 function spawnBoss() {
   enemies.push(makeEnemy("boss", WIDTH / 2 - 126, -250, "boss"));
   state.bossActive = true;
-  tone(132, 0.26, "sawtooth", 0.03);
+  showBanner("WARNING - BOSS APPROACH", 2200);
+  tone(130, 0.28, "sawtooth", 0.03);
 }
 
 function buildStageScript(stage) {
-  const gap = clamp(980 - stage * 80, 640, 980);
+  const gap = clamp(950 - stage * 70, 620, 950);
 
   return [
     { at: 500, kind: "wave", run: () => spawnLine("scout", 7, -80, 96) },
     { at: 500 + gap, kind: "wave", run: () => spawnV("scout", 7, -120) },
-    { at: 500 + gap * 2, kind: "wave", run: () => spawnDive("fighter", "left") },
-    { at: 500 + gap * 3, kind: "wave", run: () => spawnDive("fighter", "right") },
-    { at: 500 + gap * 4, kind: "wave", run: () => spawnLine("fighter", 6, -90, 118, "sine") },
-    { at: 500 + gap * 5, kind: "wave", run: () => spawnLine("bomber", 3, -120, 220, "straight") },
-    { at: 500 + gap * 6, kind: "wave", run: () => spawnV("fighter", 9, -160) },
+    { at: 500 + gap * 2, kind: "wave", run: () => spawnPincer("fighter") },
+    { at: 500 + gap * 3, kind: "wave", run: () => spawnLine("fighter", 6, -100, 116, "sine") },
+    { at: 500 + gap * 4, kind: "wave", run: () => spawnLine("bomber", 3, -140, 220, "straight") },
+    { at: 500 + gap * 5, kind: "wave", run: () => spawnV("fighter", 9, -160) },
+    {
+      at: 500 + gap * 6,
+      kind: "wave",
+      run: () => {
+        spawnDive("bomber", "left", 3);
+        spawnDive("bomber", "right", 3);
+      }
+    },
     {
       at: 500 + gap * 7,
       kind: "wave",
       run: () => {
-        spawnDive("bomber", "left");
-        spawnDive("bomber", "right");
+        spawnLine("scout", 8, -80, 88, "sine");
+        spawnPincer("fighter");
       }
     },
-    { at: 500 + gap * 8 + 600, kind: "boss", run: () => spawnBoss() }
+    { at: 500 + gap * 8 + 500, kind: "boss", run: () => spawnBoss() }
   ];
 }
 
@@ -330,19 +356,22 @@ function resetPlayerPosition() {
 function startStage(stageNumber, keepStats = true) {
   state.mode = "running";
   state.stage = stageNumber;
-  state.waveLabel = "0/0";
   state.script = buildStageScript(stageNumber);
+  state.combatEventsTotal = state.script.filter((s) => s.kind === "wave" || s.kind === "boss").length;
   state.scriptIndex = 0;
+  state.waveLabel = `0/${state.combatEventsTotal}`;
   state.elapsedMs = 0;
   state.scrollY = 0;
   state.bossActive = false;
-  state.invulnerableUntil = performance.now() + 1300;
+  state.invulnerableUntil = performance.now() + 1350;
+  state.bannerUntil = 0;
 
   if (!keepStats) {
     state.score = 0;
     state.lives = 3;
     state.bombs = 3;
     state.power = 1;
+    state.medalValue = 100;
   }
 
   playerBullets = [];
@@ -350,9 +379,11 @@ function startStage(stageNumber, keepStats = true) {
   enemies = [];
   powerUps = [];
   particles = [];
+
   resetPlayerPosition();
   syncHud();
   hideOverlay();
+  showBanner(`STAGE ${state.stage} START`, 1600);
   tone(470, 0.08, "triangle", 0.03);
 }
 
@@ -364,12 +395,14 @@ function stageClear() {
   state.mode = "stageClear";
   setBestScore();
   syncHud();
+
   showOverlay(
     `Stage ${state.stage} Cleared`,
-    "Enemy formation broken. Advance to next sortie.",
+    "Enemy air force broken. Prepare for the next sortie.",
     `Start Stage ${state.stage + 1}`,
     () => startStage(state.stage + 1, true)
   );
+
   tone(880, 0.08, "triangle", 0.03);
   setTimeout(() => tone(1060, 0.09, "triangle", 0.03), 120);
 }
@@ -378,12 +411,14 @@ function gameOver() {
   state.mode = "gameOver";
   setBestScore();
   syncHud();
+
   showOverlay(
     "Mission Failed",
     `Score ${state.score}. Hi-Score ${state.best}.`,
     "Retry From Stage 1",
     () => startRun()
   );
+
   tone(170, 0.26, "sawtooth", 0.03);
 }
 
@@ -402,6 +437,19 @@ function togglePause() {
   }
 }
 
+function getOptionOffsets() {
+  if (state.power === 1) return [];
+  if (state.power === 2) return [{ x: -42, y: 24 }];
+  if (state.power === 3) return [{ x: -44, y: 24 }, { x: 44, y: 24 }];
+  if (state.power === 4) return [{ x: -52, y: 20 }, { x: 52, y: 20 }];
+  return [
+    { x: -56, y: 20 },
+    { x: 56, y: 20 },
+    { x: -26, y: 42 },
+    { x: 26, y: 42 }
+  ];
+}
+
 function spawnPlayerBullet(x, y, vx = 0, vy = -14, damage = 1) {
   playerBullets.push({
     x: x - 6,
@@ -415,7 +463,7 @@ function spawnPlayerBullet(x, y, vx = 0, vy = -14, damage = 1) {
 }
 
 function firePlayer(nowMs) {
-  const delay = clamp(player.fireBaseDelay - (state.power - 1) * 12, 62, 126);
+  const delay = clamp(player.fireBaseDelay - (state.power - 1) * 12, 62, 124);
   if (nowMs - player.lastShotAt < delay) return;
   player.lastShotAt = nowMs;
 
@@ -442,11 +490,14 @@ function firePlayer(nowMs) {
     spawnPlayerBullet(cx, top, 0, -14.8, 1.15);
     spawnPlayerBullet(cx + 18, top, 1.05, -14.2, 1.05);
     spawnPlayerBullet(cx + 34, top, 1.65, -14, 1);
-
-    // wingmen-style extra streams for near-replica 1945 feel
-    spawnPlayerBullet(player.x + 8, player.y + 8, -0.4, -13.2, 0.82);
-    spawnPlayerBullet(player.x + player.width - 8, player.y + 8, 0.4, -13.2, 0.82);
   }
+
+  const options = getOptionOffsets();
+  options.forEach((opt) => {
+    const ox = player.x + player.width / 2 + opt.x;
+    const oy = player.y + opt.y;
+    spawnPlayerBullet(ox, oy, 0, -13.4, 0.82);
+  });
 
   tone(760, 0.03, "square", 0.012);
 }
@@ -475,36 +526,29 @@ function fireEnemy(enemy) {
       const length = Math.max(1, Math.hypot(dx, dy));
       const ux = dx / length;
       const uy = dy / length;
-      [-0.18, 0, 0.18].forEach((angleOffset) => {
+      [-0.2, 0, 0.2].forEach((spread) => {
         enemyBullets.push({
           x: ex - 7,
           y: ey,
           width: 14,
           height: 24,
-          vx: ux * 4.2 + angleOffset,
-          vy: uy * 4.2 + 4.6,
-          aimed: true
+          vx: ux * 4.4 + spread,
+          vy: uy * 4.4 + 4.5
         });
       });
     } else {
-      enemy.spiralPhase += 0.4;
+      enemy.spiralPhase += 0.36;
       const s = enemy.spiralPhase;
-      enemyBullets.push({
-        x: enemy.x + enemy.width / 2 - 7,
-        y: enemy.y + enemy.height - 18,
-        width: 14,
-        height: 24,
-        vx: Math.sin(s) * 2.2,
-        vy: 4.9
-      });
-      enemyBullets.push({
-        x: enemy.x + enemy.width / 2 - 7,
-        y: enemy.y + enemy.height - 18,
-        width: 14,
-        height: 24,
-        vx: -Math.sin(s) * 2.2,
-        vy: 4.9
-      });
+      for (let i = 0; i < 2; i += 1) {
+        enemyBullets.push({
+          x: enemy.x + enemy.width / 2 - 7,
+          y: enemy.y + enemy.height - 18,
+          width: 14,
+          height: 24,
+          vx: Math.sin(s + i * Math.PI) * 2.3,
+          vy: 5
+        });
+      }
     }
 
     enemy.attackMode = (enemy.attackMode + 1) % 3;
@@ -513,7 +557,7 @@ function fireEnemy(enemy) {
 
   const px = player.x + player.width / 2;
   const ex = enemy.x + enemy.width / 2;
-  const aim = clamp((px - ex) / 280, -1.1, 1.1);
+  const aim = clamp((px - ex) / 280, -1.15, 1.15);
 
   enemyBullets.push({
     x: ex - 6,
@@ -521,32 +565,45 @@ function fireEnemy(enemy) {
     width: 12,
     height: 22,
     vx: aim,
-    vy: enemy.type === "bomber" ? 7.2 : 6.2
+    vy: enemy.type === "bomber" ? 7.3 : 6.2
   });
 }
 
 function maybeDropPower(enemy) {
   let chance = 0;
-  if (enemy.type === "fighter") chance = 0.22;
-  if (enemy.type === "bomber") chance = 0.34;
+  if (enemy.type === "fighter") chance = 0.24;
+  if (enemy.type === "bomber") chance = 0.36;
   if (enemy.type === "boss") chance = 1;
   if (Math.random() > chance) return;
 
   if (enemy.type === "boss") {
     powerUps.push({ type: "P", x: enemy.x + enemy.width * 0.35, y: enemy.y + enemy.height * 0.5, width: 40, height: 40, vy: 2.1 });
     powerUps.push({ type: "B", x: enemy.x + enemy.width * 0.58, y: enemy.y + enemy.height * 0.5, width: 40, height: 40, vy: 2.1 });
+    powerUps.push({ type: "M", x: enemy.x + enemy.width * 0.48, y: enemy.y + enemy.height * 0.38, width: 42, height: 42, vy: 2.1 });
     return;
   }
 
-  const type = Math.random() < 0.72 ? "P" : "B";
+  const roll = Math.random();
+  const type = roll < 0.6 ? "P" : roll < 0.82 ? "M" : "B";
+
   powerUps.push({
     type,
     x: enemy.x + enemy.width / 2 - 20,
     y: enemy.y + enemy.height / 2 - 20,
-    width: 40,
-    height: 40,
-    vy: 2.1
+    width: type === "M" ? 42 : 40,
+    height: type === "M" ? 42 : 40,
+    vy: 2.2
   });
+}
+
+function collectMedal() {
+  state.score += state.medalValue;
+  state.medalValue = clamp(state.medalValue + 100, 100, 1000);
+  tone(700, 0.05, "triangle", 0.02);
+}
+
+function resetMedalChain() {
+  state.medalValue = 100;
 }
 
 function applyPower(type) {
@@ -554,12 +611,12 @@ function applyPower(type) {
     state.power = clamp(state.power + 1, 1, 5);
     state.score += 150;
     tone(620, 0.08, "triangle", 0.026);
-  }
-
-  if (type === "B") {
+  } else if (type === "B") {
     state.bombs = clamp(state.bombs + 1, 0, 9);
     state.score += 100;
     tone(330, 0.08, "triangle", 0.026);
+  } else {
+    collectMedal();
   }
 
   setBestScore();
@@ -583,8 +640,9 @@ function damagePlayer() {
   state.power = Math.max(1, state.power - 1);
   state.invulnerableUntil = now + 2300;
   enemyBullets = [];
+  resetMedalChain();
 
-  spawnBurst(player.x + player.width / 2, player.y + player.height / 2, 28, "#ffbe8d");
+  spawnBurst(player.x + player.width / 2, player.y + player.height / 2, 30, "#ffbe8d");
   tone(180, 0.12, "sawtooth", 0.03);
 
   if (state.lives <= 0) {
@@ -607,8 +665,8 @@ function useBomb() {
 
   enemies = enemies.filter((enemy) => {
     if (enemy.type === "boss") {
-      enemy.hp -= 95;
-      spawnBurst(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 34, "#ffe8b8");
+      enemy.hp -= 110;
+      spawnBurst(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 36, "#ffe8b8");
       if (enemy.hp <= 0) {
         gained += enemy.score;
         maybeDropPower(enemy);
@@ -620,7 +678,7 @@ function useBomb() {
 
     gained += enemy.score;
     maybeDropPower(enemy);
-    spawnBurst(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 16, "#ffe8b8");
+    spawnBurst(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 18, "#ffe8b8");
     return false;
   });
 
@@ -665,7 +723,11 @@ function updateScript() {
   while (state.scriptIndex < state.script.length && state.elapsedMs >= state.script[state.scriptIndex].at) {
     const entry = state.script[state.scriptIndex];
     state.scriptIndex += 1;
-    state.waveLabel = `${state.scriptIndex}/${state.script.length}`;
+
+    if (entry.kind === "wave" || entry.kind === "boss") {
+      state.waveLabel = `${state.scriptIndex}/${state.combatEventsTotal}`;
+    }
+
     entry.run();
     syncHud();
   }
@@ -688,7 +750,7 @@ function updateEnemies(dt) {
       enemy.x += enemy.vx * dt * 60;
       enemy.y += enemy.vy * dt * 60;
       if (enemy.y > HEIGHT * 0.42) {
-        enemy.vx *= 1.018;
+        enemy.vx *= 1.016;
       }
     } else if (enemy.pattern === "boss") {
       if (enemy.y < enemy.lockY) {
@@ -756,6 +818,7 @@ function resolveCombat() {
         if (enemy.type === "boss") {
           state.bossActive = false;
           state.bombs = clamp(state.bombs + 1, 0, 9);
+          showBanner(`STAGE ${state.stage} BOSS DOWN`, 1600);
           tone(980, 0.11, "triangle", 0.03);
         } else {
           tone(enemy.type === "bomber" ? 470 : 410, 0.045, "square", 0.017);
@@ -791,7 +854,14 @@ function resolveCombat() {
       return false;
     }
 
-    return power.y < HEIGHT + 60;
+    if (power.y >= HEIGHT + 40) {
+      if (power.type === "M") {
+        resetMedalChain();
+      }
+      return false;
+    }
+
+    return true;
   });
 
   setBestScore();
@@ -815,7 +885,7 @@ function update(dt, nowMs) {
   }
 
   state.elapsedMs += dt * 1000;
-  state.scrollY = (state.scrollY + dt * 214) % HEIGHT;
+  state.scrollY = (state.scrollY + dt * 218) % HEIGHT;
 
   updatePlayer(dt);
   firePlayer(nowMs);
@@ -830,7 +900,7 @@ function drawBackground() {
   ctx.drawImage(images.background, 0, state.scrollY - HEIGHT, WIDTH, HEIGHT);
   ctx.drawImage(images.background, 0, state.scrollY, WIDTH, HEIGHT);
 
-  ctx.globalAlpha = 0.12;
+  ctx.globalAlpha = 0.13;
   for (let y = 0; y < HEIGHT; y += 16) {
     ctx.fillStyle = y % 32 === 0 ? "#b2d9f8" : "#ffe5bb";
     ctx.fillRect(0, y, WIDTH, 1);
@@ -878,14 +948,16 @@ function drawBullets() {
 
 function drawPowerUps() {
   for (const power of powerUps) {
-    const sprite = power.type === "P" ? images.powerP : images.powerB;
+    const sprite = power.type === "P" ? images.powerP : power.type === "B" ? images.powerB : images.medal;
     ctx.drawImage(sprite, power.x, power.y, power.width, power.height);
 
-    ctx.fillStyle = "#14334c";
-    ctx.font = "bold 18px Trebuchet MS, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(power.type, power.x + power.width / 2, power.y + power.height / 2 + 6);
-    ctx.textAlign = "start";
+    if (power.type !== "M") {
+      ctx.fillStyle = "#14334c";
+      ctx.font = "bold 18px Trebuchet MS, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(power.type, power.x + power.width / 2, power.y + power.height / 2 + 6);
+      ctx.textAlign = "start";
+    }
   }
 }
 
@@ -900,6 +972,17 @@ function drawPlayer(nowMs) {
   ctx.drawImage(images.player, player.x, player.y, player.width, player.height);
   ctx.restore();
   ctx.globalAlpha = 1;
+
+  const options = getOptionOffsets();
+  options.forEach((opt) => {
+    const ox = player.x + player.width / 2 + opt.x - 18;
+    const oy = player.y + opt.y - 18;
+    ctx.save();
+    ctx.shadowColor = "rgba(170, 225, 255, 0.8)";
+    ctx.shadowBlur = 14;
+    ctx.drawImage(images.option, ox, oy, 36, 36);
+    ctx.restore();
+  });
 }
 
 function drawParticles() {
@@ -928,10 +1011,27 @@ function drawStageHints(nowMs) {
   }
 
   ctx.fillStyle = "rgba(7, 14, 24, 0.58)";
-  ctx.fillRect(WIDTH - 250, HEIGHT - 42, 232, 24);
+  ctx.fillRect(WIDTH - 264, HEIGHT - 42, 246, 24);
   ctx.fillStyle = "#f1fbff";
   ctx.font = "14px Trebuchet MS, sans-serif";
-  ctx.fillText(`Wave ${state.waveLabel}  |  Stage ${state.stage}`, WIDTH - 240, HEIGHT - 25);
+  ctx.fillText(`Wave ${state.waveLabel}  |  Stage ${state.stage}`, WIDTH - 254, HEIGHT - 25);
+
+  ctx.fillStyle = "rgba(7, 14, 24, 0.58)";
+  ctx.fillRect(16, 16, 180, 24);
+  ctx.fillStyle = "#ffe7b8";
+  ctx.fillText(`Medal ${state.medalValue}`, 26, 33);
+
+  if (performance.now() < state.bannerUntil) {
+    ctx.fillStyle = "rgba(8, 13, 20, 0.56)";
+    ctx.fillRect(WIDTH / 2 - 230, HEIGHT / 2 - 34, 460, 68);
+    ctx.strokeStyle = "rgba(255, 230, 180, 0.8)";
+    ctx.strokeRect(WIDTH / 2 - 230, HEIGHT / 2 - 34, 460, 68);
+    ctx.fillStyle = "#fff0cc";
+    ctx.font = "bold 28px Trebuchet MS, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(state.bannerText, WIDTH / 2, HEIGHT / 2 + 10);
+    ctx.textAlign = "start";
+  }
 }
 
 function render(nowMs) {
@@ -1023,7 +1123,7 @@ function boot() {
   syncHud();
   showOverlay(
     "Sky Force 1946",
-    "Near-replica 1945-style run: scripted waves, P/B pickups, heavy bomber lines, and boss barrages.",
+    "Major 1945-style pass: scripted stage formations, medal chain scoring, option wingmen, and classic boss patterns.",
     "Launch Stage 1",
     () => startRun()
   );
