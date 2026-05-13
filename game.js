@@ -1,4 +1,4 @@
-const canvas = document.getElementById("game");
+﻿const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 const overlay = document.getElementById("overlay");
@@ -45,27 +45,41 @@ const images = {
   power1UP: new Image(),
   powerScore: new Image(),
   medal: new Image(),
-  option: new Image()
+  option: new Image(),
+  explosionSmall: new Image(),
+  explosionMedium: new Image(),
+  explosionBoss: new Image(),
+  vfxImpact: new Image(),
+  weaponsProjectiles: new Image(),
+  weaponsOrdnance: new Image(),
+  cloudOverlay: new Image()
 };
 
-images.background.src = "assets/bg-cloud-warzone.svg";
-images.player.src = "assets/player-plane.svg";
-images.enemyScout.src = "assets/enemy-scout.svg";
-images.enemyFighter.src = "assets/enemy-fighter.svg";
-images.enemyBoss.src = "assets/enemy-boss.svg";
-images.enemyGunship.src = "assets/enemy-gunship.svg";
-images.enemyHeavy.src = "assets/enemy-heavy.svg";
-images.enemyCarrier.src = "assets/enemy-carrier.svg";
-images.bulletPlayer.src = "assets/bullet-player.svg";
-images.bulletEnemy.src = "assets/bullet-enemy.svg";
-images.powerP.src = "assets/power-spread.svg";
-images.powerB.src = "assets/power-bomb.svg";
-images.powerS.src = "assets/power-speed.svg";
-images.powerO.src = "assets/power-option.svg";
-images.power1UP.src = "assets/power-1up.svg";
-images.powerScore.src = "assets/power-score.svg";
-images.medal.src = "assets/medal.svg";
-images.option.src = "assets/option-drone.svg";
+images.background.src = "assets/bg-cloud-warzone.png";
+images.player.src = "assets/player-plane.png";
+images.enemyScout.src = "assets/enemy-scout.png";
+images.enemyFighter.src = "assets/enemy-fighter.png";
+images.enemyBoss.src = "assets/enemy-boss.png";
+images.enemyGunship.src = "assets/enemy-gunship.png";
+images.enemyHeavy.src = "assets/enemy-heavy.png";
+images.enemyCarrier.src = "assets/enemy-carrier.png";
+images.bulletPlayer.src = "assets/bullet-player.png";
+images.bulletEnemy.src = "assets/bullet-enemy.png";
+images.powerP.src = "assets/power-spread.png";
+images.powerB.src = "assets/power-bomb.png";
+images.powerS.src = "assets/power-speed.png";
+images.powerO.src = "assets/power-option.png";
+images.power1UP.src = "assets/power-1up.png";
+images.powerScore.src = "assets/power-score.png";
+images.medal.src = "assets/medal.png";
+images.option.src = "assets/option-drone.png";
+images.explosionSmall.src = "assets/explosion-small-sheet.png";
+images.explosionMedium.src = "assets/explosion-medium-sheet.png";
+images.explosionBoss.src = "assets/explosion-boss-sheet.png";
+images.vfxImpact.src = "assets/vfx-impact-sheet.png";
+images.weaponsProjectiles.src = "assets/weapons-projectiles-sheet.png";
+images.weaponsOrdnance.src = "assets/weapons-ordnance-sheet.png";
+images.cloudOverlay.src = "assets/bg-cloud-overlay.png";
 
 const input = {
   keys: new Set(),
@@ -1640,3 +1654,4 @@ loadAll(images)
       window.location.reload();
     });
   });
+
