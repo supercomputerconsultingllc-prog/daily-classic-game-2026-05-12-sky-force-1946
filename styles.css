@@ -16,7 +16,7 @@ body {
   margin: 0;
   min-height: 100dvh;
   color: var(--text);
-  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-family: "Courier New", monospace;
   background:
     radial-gradient(1200px 550px at 8% 0%, rgba(101, 194, 255, 0.22), transparent 68%),
     radial-gradient(1100px 620px at 95% 100%, rgba(255, 162, 81, 0.24), transparent 70%),
@@ -24,14 +24,14 @@ body {
 }
 
 .app {
-  width: min(980px, 96vw);
-  margin: 18px auto;
+  width: min(1020px, 98vw);
+  margin: 8px auto;
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .hud {
-  display: grid;
+  display: none;
   gap: 8px;
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
@@ -58,12 +58,12 @@ body {
 
 .stage {
   position: relative;
-  border-radius: 16px;
+  border-radius: 4px;
   overflow: hidden;
-  border: 2px solid rgba(162, 223, 255, 0.52);
+  border: 1px solid rgba(162, 223, 255, 0.35);
   box-shadow:
-    0 18px 46px rgba(0, 0, 0, 0.5),
-    inset 0 0 36px rgba(89, 196, 255, 0.08);
+    0 10px 26px rgba(0, 0, 0, 0.5),
+    inset 0 0 16px rgba(89, 196, 255, 0.06);
 }
 
 canvas {
@@ -79,9 +79,9 @@ canvas {
   justify-items: center;
   align-content: center;
   text-align: center;
-  gap: 12px;
+  gap: 10px;
   padding: 16px;
-  background: rgba(3, 10, 18, 0.58);
+  background: rgba(3, 10, 18, 0.45);
 }
 
 .overlay.hidden {
@@ -90,17 +90,16 @@ canvas {
 
 .overlay h1 {
   margin: 0;
-  font-size: clamp(34px, 4.8vw, 58px);
-  letter-spacing: 0.06em;
+  font-size: clamp(28px, 4vw, 48px);
+  letter-spacing: 0.03em;
   text-shadow:
-    0 0 12px rgba(79, 215, 255, 0.78),
-    0 0 22px rgba(255, 203, 112, 0.45);
+    0 0 8px rgba(79, 215, 255, 0.62);
 }
 
 .overlay p {
   margin: 0;
   max-width: 680px;
-  font-size: clamp(14px, 1.8vw, 20px);
+  font-size: clamp(12px, 1.5vw, 17px);
   color: #e6f4ff;
 }
 
@@ -113,9 +112,9 @@ canvas {
 
 button {
   border: none;
-  border-radius: 999px;
-  padding: 10px 20px;
-  font-size: 15px;
+  border-radius: 4px;
+  padding: 9px 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #0a1b2d;
   background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
@@ -140,8 +139,8 @@ button.ghost {
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
-  font-size: 14px;
-  color: #d9ecff;
+  font-size: 12px;
+  color: #a8bfd6;
 }
 
 .controls p {

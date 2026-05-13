@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 260">
   <defs>
     <linearGradient id="f" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffd19b"/>
-      <stop offset="1" stop-color="#ff8b4e"/>
+      <stop offset="0" stop-color="#cedbe7"/>
+      <stop offset="1" stop-color="#778593"/>
     </linearGradient>
   </defs>
   <path d="M105 14L146 78L136 160L105 242L74 160L64 78Z" fill="url(#f)"/>
-  <path d="M105 38L126 90L120 150L105 200L90 150L84 90Z" fill="#5b2d14"/>
-  <path d="M14 142L74 110L72 176L14 200Z" fill="#ffc79a"/>
-  <path d="M196 142L136 110L138 176L196 200Z" fill="#ffc79a"/>
-  <rect x="97" y="170" width="16" height="52" rx="4" fill="#ffe9ba"/>
-  <circle cx="105" cy="86" r="16" fill="#fff0ca"/>
+  <path d="M105 38L126 90L120 150L105 200L90 150L84 90Z" fill="#2e3b49"/>
+  <path d="M14 142L74 110L72 176L14 200Z" fill="#a8b7c5"/>
+  <path d="M196 142L136 110L138 176L196 200Z" fill="#a8b7c5"/>
+  <rect x="97" y="170" width="16" height="52" rx="4" fill="#efb556"/>
+  <circle cx="105" cy="86" r="16" fill="#d7ebff"/>
 </svg>
