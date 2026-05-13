@@ -1,16 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320">
   <defs>
     <linearGradient id="b" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#f8d38f"/>
-      <stop offset="1" stop-color="#c06e2a"/>
+      <stop offset="0" stop-color="#d9e5f2"/>
+      <stop offset="1" stop-color="#667788"/>
     </linearGradient>
   </defs>
   <path d="M200 22L280 84L258 170L200 300L142 170L120 84Z" fill="url(#b)"/>
-  <path d="M40 170L136 122L130 214L40 250Z" fill="#ffcf95"/>
-  <path d="M360 170L264 122L270 214L360 250Z" fill="#ffcf95"/>
-  <path d="M18 232L130 198L126 276L18 300Z" fill="#ffc27a"/>
-  <path d="M382 232L270 198L274 276L382 300Z" fill="#ffc27a"/>
-  <path d="M200 58L238 102L224 174L200 252L176 174L162 102Z" fill="#5c3115"/>
-  <rect x="186" y="196" width="28" height="68" rx="8" fill="#ffefc7"/>
-  <circle cx="200" cy="100" r="24" fill="#ffefca"/>
+  <path d="M40 170L136 122L130 214L40 250Z" fill="#9caebf"/>
+  <path d="M360 170L264 122L270 214L360 250Z" fill="#9caebf"/>
+  <path d="M18 232L130 198L126 276L18 300Z" fill="#8799ab"/>
+  <path d="M382 232L270 198L274 276L382 300Z" fill="#8799ab"/>
+  <path d="M200 58L238 102L224 174L200 252L176 174L162 102Z" fill="#2a3644"/>
+  <rect x="186" y="196" width="28" height="68" rx="8" fill="#eeb861"/>
+  <circle cx="200" cy="100" r="24" fill="#d8ecff"/>
 </svg>
