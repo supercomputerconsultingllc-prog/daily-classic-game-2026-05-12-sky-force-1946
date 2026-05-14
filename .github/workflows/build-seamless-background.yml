@@ -1,0 +1,117 @@
+name: Build Seamless Background
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/mobile-weapons-music-balance-v2
+    paths:
+      - .github/workflows/build-seamless-background.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-seamless-background:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/mobile-weapons-music-balance-v2
+
+      - name: Install Pillow
+        run: python3 -m pip install --user pillow
+
+      - name: Build seamless background asset
+        run: |
+          cat > /tmp/build_seamless_bg.py <<'PY'
+          from pathlib import Path
+          from PIL import Image
+
+          src = Path('assets/bg-cloud-warzone.png')
+          out = Path('assets/bg-cloud-warzone-seamless.png')
+          if not src.exists():
+              raise SystemExit(f'Missing source image: {src}')
+
+          im = Image.open(src).convert('RGB')
+          w, h = im.size
+          px = im.load()
+
+          band = max(96, min(260, int(h * 0.14)))
+
+          # First pass: force the exact top and bottom rows toward a shared tone,
+          # then fade that adjustment inward so the asset still looks like the original.
+          for y in range(band):
+              t = y / max(1, band - 1)
+              strength = (1.0 - t) ** 1.85
+              top_y = y
+              bottom_y = h - 1 - y
+              for x in range(w):
+                  tr, tg, tb = px[x, top_y]
+                  br, bg, bb = px[x, bottom_y]
+                  ar = int((tr + br) / 2)
+                  ag = int((tg + bg) / 2)
+                  ab = int((tb + bb) / 2)
+                  px[x, top_y] = (
+                      int(tr * (1 - strength) + ar * strength),
+                      int(tg * (1 - strength) + ag * strength),
+                      int(tb * (1 - strength) + ab * strength),
+                  )
+                  px[x, bottom_y] = (
+                      int(br * (1 - strength) + ar * strength),
+                      int(bg * (1 - strength) + ag * strength),
+                      int(bb * (1 - strength) + ab * strength),
+                  )
+
+          # Verification: compare final edge colors.
+          top_samples = []
+          bottom_samples = []
+          sample_band = 6
+          for y in range(sample_band):
+              for x in range(w):
+                  top_samples.append(px[x, y])
+                  bottom_samples.append(px[x, h - 1 - y])
+
+          def avg(samples):
+              n = len(samples)
+              return tuple(sum(s[i] for s in samples) / n for i in range(3))
+
+          top_avg = avg(top_samples)
+          bottom_avg = avg(bottom_samples)
+          diff = tuple(abs(top_avg[i] - bottom_avg[i]) for i in range(3))
+          print('top_avg_rgb=', tuple(round(v, 2) for v in top_avg))
+          print('bottom_avg_rgb=', tuple(round(v, 2) for v in bottom_avg))
+          print('edge_diff_rgb=', tuple(round(v, 2) for v in diff))
+
+          im.save(out, optimize=True)
+          print(f'Wrote {out} from {src}, size={w}x{h}')
+          PY
+          python3 /tmp/build_seamless_bg.py
+
+      - name: Patch loader to use real seamless asset
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('mobile-fullscreen-loader-v10.js')
+          text = p.read_text(encoding='utf-8')
+          needle = "source = patchGameSource(source);"
+          replacement = "source = patchGameSource(source).replace('images.background.src = \\\"assets/bg-cloud-warzone.png\\\";', 'images.background.src = \\\"assets/bg-cloud-warzone-seamless.png\\\";');"
+          if 'bg-cloud-warzone-seamless.png' not in text:
+              if needle not in text:
+                  raise SystemExit('Could not find loader patch point')
+              text = text.replace(needle, replacement)
+              p.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit generated asset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/bg-cloud-warzone-seamless.png mobile-fullscreen-loader-v10.js
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Generate seamless background asset"
+            git push origin codex/mobile-weapons-music-balance-v2
+          fi
