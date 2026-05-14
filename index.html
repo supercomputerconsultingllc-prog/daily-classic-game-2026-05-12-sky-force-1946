@@ -12,7 +12,6 @@
       <div class="chip"><span>Score</span><strong id="scoreValue">0</strong></div>
       <div class="chip"><span>Hi-Score</span><strong id="bestValue">0</strong></div>
       <div class="chip"><span>Lives</span><strong id="livesValue">3</strong></div>
-      <div class="chip"><span>Bombs</span><strong id="bombsValue">3</strong></div>
       <div class="chip"><span>Power</span><strong id="weaponValue">P1</strong></div>
       <div class="chip"><span>Speed</span><strong id="speedValue">S1</strong></div>
       <div class="chip"><span>Options</span><strong id="optionValue">0</strong></div>
@@ -23,7 +22,7 @@
       <canvas id="game" width="900" height="1200" aria-label="Sky Force 1946 game"></canvas>
       <div class="overlay" id="overlay">
         <h1 id="overlayTitle">Sky Force 1946</h1>
-        <p id="overlayMessage">Air raid incoming. Dodge, strafe, and blast through enemy squadrons.</p>
+        <p id="overlayMessage">Air raid incoming. Dodge, strafe, and fly through enemy squadrons.</p>
         <div class="overlay-actions">
           <button type="button" id="startButton">Launch Mission</button>
         </div>
@@ -32,12 +31,10 @@
 
     <section class="controls">
       <button id="pauseButton" type="button" class="ghost">Pause / Resume</button>
-      <p>Move: <kbd>Arrows</kbd> / <kbd>WASD</kbd> / mouse / touch</p>
-      <p>Bomb: <kbd>Space</kbd></p>
-      <p>Power-ups: <kbd>P</kbd> power, <kbd>B</kbd> bomb, <kbd>S</kbd> speed, <kbd>O</kbd> option, <kbd>1UP</kbd> life</p>
     </section>
   </main>
 
+  <script src="mobile-seamless-background-v13.js"></script>
   <script src="mobile-fullscreen-loader-v10.js"></script>
   <script src="mobile-music-game-sync-v11.js"></script>
   <script src="mobile-music-resume-sync-v12.js"></script>
