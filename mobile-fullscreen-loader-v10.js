@@ -214,6 +214,7 @@
       .replace('const PLAY_RIGHT = PLAY_X + PLAY_W;', 'const PLAY_RIGHT = WIDTH;')
       .replace('state.power = 1;', 'state.power = 2;')
       .replace('state.speedLevel = 1;', 'state.speedLevel = 2;')
+      .replace('images.background.src = "assets/bg-cloud-warzone.png";', 'images.background.src = "assets/bg-cloud-warzone-seamless.png";')
       .replaceAll('width: 12,\n    height: 22,', 'width: 20,\n    height: 34,')
       .replaceAll('width: 12,\n      height: 22,', 'width: 20,\n      height: 34,')
       .replaceAll('const w = size >= 1.2 ? 13 : 10;', 'const w = size >= 1.2 ? 24 : 20;')
@@ -384,7 +385,7 @@
     try {
       const response = await fetch('game.js', { cache: 'no-store' });
       let source = await response.text();
-      source = patchGameSource(source).replace('images.background.src = \"assets/bg-cloud-warzone.png\";', 'images.background.src = \"assets/bg-cloud-warzone-seamless.png\";');
+      source = patchGameSource(source);
       const script = document.createElement('script');
       script.textContent = source + '\n//# sourceURL=game.v10-fullscreen-patched.js';
       document.body.appendChild(script);
