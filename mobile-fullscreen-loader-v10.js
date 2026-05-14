@@ -384,7 +384,7 @@
     try {
       const response = await fetch('game.js', { cache: 'no-store' });
       let source = await response.text();
-      source = patchGameSource(source);
+      source = patchGameSource(source).replace('images.background.src = \"assets/bg-cloud-warzone.png\";', 'images.background.src = \"assets/bg-cloud-warzone-seamless.png\";');
       const script = document.createElement('script');
       script.textContent = source + '\n//# sourceURL=game.v10-fullscreen-patched.js';
       document.body.appendChild(script);
