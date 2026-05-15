@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Sky Force 1946</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -47,13 +47,31 @@
     </section>
 
     <section class="controls">
-      <button id="pauseButton" type="button" class="ghost">Pause / Resume</button>
-      <p>Move: <kbd>Arrows</kbd> / <kbd>WASD</kbd> / mouse / touch</p>
-      <p>Bomb: <kbd>Space</kbd></p>
-      <p>Plane selection is available before launch or between retries.</p>
+      <button id="cyclePlaneButton" type="button" class="ghost character-toggle">Change Character: Mustang</button>
+      <button id="pauseButton" type="button" class="ghost pause-toggle">Pause / Resume</button>
     </section>
   </main>
 
   <script src="game.js"></script>
+  <script>
+    (() => {
+      const button = document.getElementById('cyclePlaneButton');
+      const tabs = Array.from(document.querySelectorAll('.plane-tab'));
+      if (!button || tabs.length === 0) return;
+      const label = () => {
+        const active = tabs.find(tab => tab.classList.contains('active')) || tabs[0];
+        const name = active.querySelector('span')?.textContent?.trim() || 'Character';
+        button.textContent = `Change Character: ${name}`;
+      };
+      button.addEventListener('click', () => {
+        const active = tabs.findIndex(tab => tab.classList.contains('active'));
+        const next = tabs[(active + 1 + tabs.length) % tabs.length];
+        next.click();
+        window.setTimeout(label, 25);
+      });
+      window.setInterval(label, 500);
+      label();
+    })();
+  </script>
 </body>
 </html>
