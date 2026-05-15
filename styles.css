@@ -60,9 +60,10 @@ body {
 canvas {
   position: absolute;
   top: 0;
-  left: -35.25vw;
-  width: 170.5vw;
+  left: 50%;
+  width: auto;
   height: 100%;
+  transform: translateX(-50%);
   display: block;
 }
 
@@ -167,6 +168,15 @@ kbd {
   button {
     font-size: 12px;
     padding-inline: 12px;
+  }
+}
+
+@media (orientation: landscape) {
+  canvas {
+    width: 100vw;
+    height: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
   }
 }
 
