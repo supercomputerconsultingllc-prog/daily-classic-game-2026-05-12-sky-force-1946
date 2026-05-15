@@ -1,0 +1,222 @@
+name: Build Raster Gameplay Assets V28
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/mobile-weapons-music-balance-v2
+    paths:
+      - .github/workflows/build-raster-assets-v28.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-raster-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/mobile-weapons-music-balance-v2
+
+      - name: Install Pillow
+        run: python3 -m pip install --user pillow
+
+      - name: Generate raster sprite sheet and v28 runtime
+        run: |
+          cat > /tmp/build_v28.py <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw, ImageFilter
+          import math, random, json
+
+          W,H=768,768
+          sheet=Image.new('RGBA',(W,H),(0,0,0,0))
+          d=ImageDraw.Draw(sheet,'RGBA')
+          cells={}
+          def cell(name,x,y,w,h):
+              cells[name]=[x,y,w,h]
+          def glow(points, fill, glow_fill):
+              layer=Image.new('RGBA',(W,H),(0,0,0,0))
+              ld=ImageDraw.Draw(layer,'RGBA')
+              ld.polygon(points, fill=glow_fill)
+              sheet.alpha_composite(layer.filter(ImageFilter.GaussianBlur(5)))
+              d.polygon(points, fill=fill, outline=(255,255,255,220))
+
+          planes=[('falcon',0,0,(80,220,255),(255,235,90)),('raptor',128,0,(255,190,60),(255,90,60)),('titan',256,0,(255,110,90),(120,230,255)),('ghost',384,0,(180,140,255),(90,255,230))]
+          for name,x,y,main,acc in planes:
+              cell('plane_'+name,x,y,128,160); cx=x+64
+              if name=='titan':
+                  body=[(cx,y+4),(x+105,y+72),(x+92,y+136),(cx,y+154),(x+36,y+136),(x+23,y+72)]
+                  wings=[(x+38,y+70),(x+4,y+130),(x+50,y+112),(x+90,y+70),(x+124,y+130),(x+78,y+112)]
+              elif name=='ghost':
+                  body=[(cx,y+4),(x+95,y+92),(cx,y+156),(x+33,y+92)]
+                  wings=[(x+42,y+72),(x+6,y+138),(x+55,y+116),(x+86,y+72),(x+122,y+138),(x+73,y+116)]
+              elif name=='raptor':
+                  body=[(cx,y+4),(x+112,y+130),(x+82,y+113),(cx,y+156),(x+46,y+113),(x+16,y+130)]
+                  wings=[(x+34,y+70),(x+4,y+118),(x+54,y+104),(x+94,y+70),(x+124,y+118),(x+74,y+104)]
+              else:
+                  body=[(cx,y+4),(x+98,y+76),(x+84,y+136),(cx,y+156),(x+44,y+136),(x+30,y+76)]
+                  wings=[(x+40,y+70),(x+6,y+128),(x+54,y+108),(x+88,y+70),(x+122,y+128),(x+74,y+108)]
+              glow(wings, (*main,220), (*main,85))
+              glow(body, (*main,245), (*main,100))
+              d.ellipse((cx-14,y+42,cx+14,y+74), fill=(*acc,235), outline=(255,255,255,220), width=2)
+              d.line((cx,y+14,cx,y+142), fill=(255,255,255,150), width=3)
+
+          for name,x,y,col in [('bullet_falcon',0,180,(60,230,255)),('bullet_raptor',64,180,(255,220,75)),('bullet_titan',128,180,(255,105,70)),('bullet_ghost',192,180,(185,140,255))]:
+              cell(name,x,y,48,96)
+              d.ellipse((x+10,y+4,x+38,y+92), fill=(*col,120))
+              d.polygon([(x+24,y+2),(x+42,y+48),(x+24,y+94),(x+6,y+48)], fill=(*col,245), outline=(255,255,255,230))
+              d.line((x+24,y+10,x+24,y+86), fill=(255,255,255,180), width=3)
+
+          cell('enemy_bullet',256,180,64,96)
+          x,y=256,180
+          d.ellipse((x+6,y+4,x+58,y+92), fill=(255,70,30,150))
+          d.ellipse((x+14,y+16,x+50,y+80), fill=(255,230,90,210))
+          d.ellipse((x+24,y+32,x+40,y+56), fill=(255,255,255,245))
+
+          for name,x,col in [('missile',336,(220,240,255)),('homing',416,(100,255,230))]:
+              cell(name,x,180,64,112); y=180
+              d.polygon([(x+32,y+2),(x+50,y+84),(x+32,y+110),(x+14,y+84)], fill=(*col,245), outline=(255,255,255,225))
+              d.polygon([(x+14,y+78),(x+2,y+108),(x+24,y+94)], fill=(90,110,125,235))
+              d.polygon([(x+50,y+78),(x+62,y+108),(x+40,y+94)], fill=(90,110,125,235))
+              d.ellipse((x+22,y+28,x+42,y+48), fill=(255,255,255,150))
+              d.polygon([(x+22,y+108),(x+32,y+112),(x+42,y+108)], fill=(255,95,35,240))
+
+          for i in range(4):
+              x=i*96; y=330; cell(f'explosion_{i}',x,y,96,96); cx=x+48; cy=y+48
+              random.seed(10+i)
+              for r,col in [(43,(255,45,10,70)),(32,(255,120,20,135)),(21,(255,230,70,215)),(9,(255,255,255,245))]:
+                  pts=[]
+                  for k in range(22):
+                      ang=2*math.pi*k/22; rr=r*(0.7+0.55*random.random())*(1-i*.07)
+                      pts.append((cx+math.cos(ang)*rr, cy+math.sin(ang)*rr))
+                  d.polygon(pts, fill=col)
+
+          out=Path('assets/v28-raster-gameplay-sprites.webp')
+          out.parent.mkdir(exist_ok=True)
+          sheet.save(out, 'WEBP', quality=84, method=6)
+
+          js = r'''
+          (function(){
+            'use strict';
+            if(window.__SKY_FORCE_RASTER_ASSETS_HEALTH_V28__) return;
+            window.__SKY_FORCE_RASTER_ASSETS_HEALTH_V28__ = true;
+            document.documentElement.dataset.v28RasterAssets = 'loaded';
+
+            var SPRITE_SRC = 'assets/v28-raster-gameplay-sprites.webp';
+            var CELLS = __CELLS__;
+            var sprite = new Image();
+            sprite.src = SPRITE_SRC;
+
+            var PLANES = [
+              { id:'falcon', name:'FALCON', role:'Balanced Fighter', hp:5, weapon:'Twin Cannon' },
+              { id:'raptor', name:'RAPTOR', role:'Spread Assault', hp:4, weapon:'Wide Fan' },
+              { id:'titan', name:'TITAN', role:'Heavy Cannon', hp:7, weapon:'Piercing Rail' },
+              { id:'ghost', name:'GHOST', role:'Needle Striker', hp:3, weapon:'Needle Lance' }
+            ];
+            var planeId = localStorage.getItem('skyForceV28Plane') || 'falcon';
+            var maxHp = getPlane().hp;
+            var hp = maxHp;
+            var lastLives = null;
+            var lastMode = '';
+            var lastMusicIndex = -1;
+            var musicQueue = [];
+            var renderExplosions = [];
+
+            function getPlane(){ return PLANES.find(function(p){return p.id===planeId;}) || PLANES[0]; }
+            function cell(name){ return CELLS[name] || CELLS.plane_falcon; }
+            function drawCell(name,x,y,w,h,rot){
+              if(typeof ctx === 'undefined' || !sprite.complete) return;
+              var c = cell(name);
+              ctx.save();
+              ctx.translate(x+w/2,y+h/2);
+              if(rot) ctx.rotate(rot);
+              ctx.drawImage(sprite,c[0],c[1],c[2],c[3],-w/2,-h/2,w,h);
+              ctx.restore();
+            }
+            function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+            function refillMusicQueue(){
+              var tracks = (window.__SKY_FORCE_MOBILE_V10__ && window.__SKY_FORCE_MOBILE_V10__.TRACKS) || [];
+              musicQueue = shuffle(tracks.map(function(_,i){return i;}));
+              if(musicQueue.length>1 && musicQueue[0]===lastMusicIndex){ var t=musicQueue[0]; musicQueue[0]=musicQueue[1]; musicQueue[1]=t; }
+            }
+            function installMusicNoRepeat(){
+              if(!window.__SKY_FORCE_MOBILE_V10__) return;
+              var next=document.getElementById('v10MusicNext');
+              if(next && !next.dataset.v28NoRepeat){
+                next.dataset.v28NoRepeat='1';
+                next.addEventListener('click',function(e){
+                  e.preventDefault(); e.stopImmediatePropagation();
+                  document.querySelectorAll('audio,video').forEach(function(a){try{a.pause();}catch(_){} });
+                  var tracks = window.__SKY_FORCE_MOBILE_V10__.TRACKS || [];
+                  if(!musicQueue.length) refillMusicQueue();
+                  lastMusicIndex = musicQueue.shift();
+                  var a = new Audio(tracks[lastMusicIndex].src);
+                  a.volume=.52; a.play().catch(function(){});
+                  var title=document.getElementById('v10MusicTitle');
+                  if(title) title.textContent=tracks[lastMusicIndex].title+' • '+tracks[lastMusicIndex].artist;
+                },true);
+              }
+            }
+            function installPlaneTabs(){
+              var old=document.getElementById('v25PlaneDock'); if(old) old.remove();
+              var old27=document.getElementById('v27PlaneTab'); if(old27) old27.remove();
+              var oldPanel=document.getElementById('v27PlanePanel'); if(oldPanel) oldPanel.remove();
+              if(document.getElementById('v28PlaneTab')) return;
+              var tab=document.createElement('button'); tab.id='v28PlaneTab'; tab.textContent='PLANES'; document.body.appendChild(tab);
+              var panel=document.createElement('div'); panel.id='v28PlanePanel';
+              panel.innerHTML='<div class="v28-title">Select Plane</div><div class="v28-grid">'+PLANES.map(function(p){return '<button class="v28-plane" data-plane="'+p.id+'"><canvas width="64" height="80" data-preview="'+p.id+'"></canvas><b>'+p.name+'</b><small>'+p.role+'<br>'+p.weapon+' • HP '+p.hp+'</small></button>';}).join('')+'</div>';
+              document.body.appendChild(panel);
+              var style=document.createElement('style'); style.textContent='#v28PlaneTab{position:fixed;left:7px;bottom:50px;z-index:10500;min-height:32px;border-radius:13px;border:1px solid rgba(190,235,255,.8);background:rgba(5,23,43,.76);color:white;font:900 10px system-ui}#v28PlanePanel{position:fixed;left:8px;right:8px;top:max(56px,env(safe-area-inset-top));z-index:10499;display:none;padding:10px;border-radius:16px;border:1px solid rgba(157,227,255,.75);background:rgba(2,12,26,.95);box-shadow:0 16px 38px rgba(0,0,0,.48);color:white}#v28PlanePanel.open{display:block}.v28-title{text-align:center;font:900 14px system-ui;margin-bottom:8px}.v28-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.v28-plane{border-radius:14px;border:1px solid rgba(255,255,255,.22);background:linear-gradient(180deg,rgba(18,79,118,.75),rgba(5,24,46,.93));color:white;text-align:left;padding:7px;font:800 10px system-ui}.v28-plane.active{outline:2px solid #7ee8ff}.v28-plane canvas{float:right;width:42px;height:56px}.v28-plane b{display:block;font-size:13px}.v28-plane small{display:block;color:rgba(230,246,255,.86);font-weight:700}.hud .chip:not(.v27-keep){display:none!important}.overlay p,.controls p{display:none!important}#v28Health{position:fixed;left:6px;right:6px;top:max(5px,env(safe-area-inset-top));z-index:10600;height:18px;border:1px solid rgba(255,255,255,.72);border-radius:999px;background:rgba(2,10,18,.46);overflow:hidden;pointer-events:none;box-shadow:0 2px 10px rgba(0,0,0,.5)}#v28HealthFill{height:100%;background:linear-gradient(90deg,#22ff88,#ffec4a,#ff4a3d);width:100%;box-shadow:0 0 16px rgba(80,255,168,.6)}#v28HealthText{position:absolute;inset:0;text-align:center;color:#fff;font:900 11px/18px system-ui;text-shadow:0 1px 4px #000}'; document.head.appendChild(style);
+              tab.onclick=function(){ panel.classList.toggle('open'); drawPreviews(); };
+              panel.onclick=function(e){ var b=e.target.closest('.v28-plane'); if(!b) return; planeId=b.dataset.plane; localStorage.setItem('skyForceV28Plane',planeId); maxHp=getPlane().hp; hp=maxHp; panel.classList.remove('open'); updateHealth(); drawPreviews(); };
+              drawPreviews();
+            }
+            function drawPreviews(){
+              document.querySelectorAll('#v28PlanePanel canvas').forEach(function(cnv){ var id=cnv.dataset.preview; var c=cnv.getContext('2d'); c.clearRect(0,0,64,80); var rc=cell('plane_'+id); if(sprite.complete)c.drawImage(sprite,rc[0],rc[1],rc[2],rc[3],4,0,56,76); });
+              document.querySelectorAll('.v28-plane').forEach(function(b){ b.classList.toggle('active',b.dataset.plane===planeId); });
+            }
+            function installHealth(){ if(document.getElementById('v28Health')) return; var h=document.createElement('div'); h.id='v28Health'; h.innerHTML='<div id="v28HealthFill"></div><div id="v28HealthText"></div>'; document.body.appendChild(h); }
+            function updateHealth(){ installHealth(); var fill=document.getElementById('v28HealthFill'),txt=document.getElementById('v28HealthText'); var p=Math.max(0,Math.min(1,hp/maxHp)); if(fill)fill.style.width=(p*100).toFixed(0)+'%'; if(txt)txt.textContent=getPlane().name+' HEALTH '+hp+'/'+maxHp; }
+            function watchDamage(){ if(typeof state==='undefined') return; if(lastLives===null) lastLives=state.lives; if(state.mode!==lastMode){ lastMode=state.mode; if(state.mode==='running'){ maxHp=getPlane().hp; hp=maxHp; lastLives=state.lives; } } if(typeof state.lives==='number' && state.lives<lastLives){ hp-=1; if(hp>0){ state.lives=lastLives; if(typeof syncHud==='function') syncHud(); } else lastLives=state.lives; } else if(typeof state.lives==='number') lastLives=state.lives; updateHealth(); }
+            function renderRasterAssets(){
+              if(!sprite.complete) return;
+              var p=getPlane();
+              if(typeof player!=='undefined') drawCell('plane_'+p.id,player.x-18,player.y-22,player.width+36,player.height+52,0);
+              if(typeof playerBullets!=='undefined') playerBullets.forEach(function(b){ var name=b.homing?'homing':(b.missile?'missile':'bullet_'+p.id); drawCell(name,b.x-10,b.y-14,(b.width||12)+20,(b.height||24)+28,Math.atan2((b.vy||-1),(b.vx||0))+Math.PI/2); });
+              if(typeof enemyBullets!=='undefined') enemyBullets.forEach(function(b){ drawCell('enemy_bullet',b.x-12,b.y-12,(b.width||12)+24,(b.height||22)+24,Math.atan2((b.vy||1),(b.vx||0))-Math.PI/2); });
+              renderExplosions.forEach(function(e){ var age=performance.now()-e.t; var frame=Math.min(3,Math.floor(age/90)); if(age<390) drawCell('explosion_'+frame,e.x-e.s/2,e.y-e.s/2,e.s,e.s,age/220); });
+              renderExplosions=renderExplosions.filter(function(e){return performance.now()-e.t<390;});
+            }
+            function hookDraw(){ if(typeof draw==='function'&&!draw.__v28Raster){ var orig=draw; draw=function(){ var r=orig.apply(this,arguments); try{renderRasterAssets();}catch(e){} return r; }; draw.__v28Raster=true; } }
+            function hookExplosion(){ if(typeof spawnExplosion==='function'&&!spawnExplosion.__v28Raster){ var orig=spawnExplosion; spawnExplosion=function(x,y,s){ renderExplosions.push({x:x||450,y:y||600,s:s||120,t:performance.now()}); return orig.apply(this,arguments); }; spawnExplosion.__v28Raster=true; } }
+            function loop(){ installMusicNoRepeat(); installPlaneTabs(); installHealth(); hookDraw(); hookExplosion(); watchDamage(); requestAnimationFrame(loop); }
+            sprite.onload=function(){ drawPreviews(); };
+            if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',loop); else loop();
+          })();
+          '''
+          js = js.replace('__CELLS__', json.dumps(cells))
+          Path('mobile-raster-assets-health-v28.js').write_text(js, encoding='utf-8')
+
+          index = Path('index.html')
+          text = index.read_text(encoding='utf-8')
+          text = text.replace('  <script src="mobile-polish-assets-health-v27.js"></script>\n', '')
+          if 'mobile-raster-assets-health-v28.js' not in text:
+              text = text.replace('</body>', '  <script src="mobile-raster-assets-health-v28.js"></script>\n</body>')
+          index.write_text(text, encoding='utf-8')
+          print('Generated raster sprite sheet and v28 runtime')
+          PY
+          python3 /tmp/build_v28.py
+
+      - name: Commit generated v28 raster build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/v28-raster-gameplay-sprites.webp mobile-raster-assets-health-v28.js index.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Generate raster gameplay assets v28"
+            git push origin codex/mobile-weapons-music-balance-v2
+          fi
