@@ -13,10 +13,26 @@
       <div class="chip"><span>Hi-Score</span><strong id="bestValue">0</strong></div>
       <div class="chip"><span>Lives</span><strong id="livesValue">3</strong></div>
       <div class="chip"><span>Bombs</span><strong id="bombsValue">3</strong></div>
+      <div class="chip"><span>Plane</span><strong id="planeNameValue">Mustang</strong></div>
       <div class="chip"><span>Power</span><strong id="weaponValue">P1</strong></div>
       <div class="chip"><span>Speed</span><strong id="speedValue">S1</strong></div>
       <div class="chip"><span>Options</span><strong id="optionValue">0</strong></div>
       <div class="chip"><span>Stage</span><strong id="stageValue">1-1</strong></div>
+    </section>
+
+    <section class="plane-select" aria-label="Plane selection">
+      <button type="button" class="plane-tab active" data-plane="mustang" aria-selected="true">
+        <span>Mustang</span><small>Balanced cannon</small>
+      </button>
+      <button type="button" class="plane-tab" data-plane="lightning" aria-selected="false">
+        <span>Lightning</span><small>Twin laser lanes</small>
+      </button>
+      <button type="button" class="plane-tab" data-plane="corsair" aria-selected="false">
+        <span>Corsair</span><small>Wide spread fire</small>
+      </button>
+      <button type="button" class="plane-tab" data-plane="raiden" aria-selected="false">
+        <span>Raiden</span><small>Heavy rockets</small>
+      </button>
     </section>
 
     <section class="stage">
@@ -34,7 +50,7 @@
       <button id="pauseButton" type="button" class="ghost">Pause / Resume</button>
       <p>Move: <kbd>Arrows</kbd> / <kbd>WASD</kbd> / mouse / touch</p>
       <p>Bomb: <kbd>Space</kbd></p>
-      <p>Power-ups: <kbd>P</kbd> power, <kbd>B</kbd> bomb, <kbd>S</kbd> speed, <kbd>O</kbd> option, <kbd>1UP</kbd> life</p>
+      <p>Plane selection is available before launch or between retries.</p>
     </section>
   </main>
 
